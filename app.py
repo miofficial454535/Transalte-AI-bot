@@ -1,58 +1,41 @@
-from flask import Flask, request, jsonify
-from googletrans import Translator
-
-# Twilio example import
+from flask import Flask, request
 from twilio.rest import Client
+from twilio.twiml.messaging_response import MessagingResponse
+from deep_translator import GoogleTranslator
 
-app = Flask(__name__)
-translator = Translator()
+# Twilio credentials (your own values)
+account_sid = "AC3544ea0e102c9990258eaabc801c03e0"
+auth_token = "4c11dcc444ac491a6969e8854f18d12f"
+twilio_whatsapp = "whatsapp:+14155238886"  # Twilio sandbox number
 
-# SID and Auth Token from your details
-TWILIO_SID = "AC606533d9e625f2daa604327665b20189"
-TWILIO_TOKEN = "d40a6e63406449e46955cedbb35a568c"
+client = Client(account_sid, auth_token)
+app = Flask(_name_)
 
-# Twilio client setup
-twilio_client = Client(TWILIO_SID, TWILIO_TOKEN)
+@app.route("/whatsapp", methods=["POST"])
+def whatsapp_reply():
+    incoming_msg = request.values.get("Body", "").strip()
+    from_number = request.values.get("From")
+    resp = MessagingResponse()
+    msg = resp.message()
 
-def translate_message(text):
-    detected = translator.detect(text)
-    if detected.lang == 'ar':
-        result = translator.translate(text, src='ar', dest='en')
-    elif detected.lang == 'en':
-        result = translator.translate(text, src='en', dest='ar')
-    else:
-        result = translator.translate(text, dest='ar')
-    return result.text
+    if incoming_msg:
+        try:
+            # Try English → Arabic
+            translated = GoogleTranslator(source='en', target='ar').translate(incoming_msg)
+            reply = f"English → Arabic:\n{translated}"
+        except Exception:
+            # If not English, try Arabic → English
+            translated = GoogleTranslator(source='ar', target='en').translate(incoming_msg)
+            reply = f"Arabic → English:\n{translated}"
 
-@app.route('/send', methods=['POST'])
-def send():
-    data = request.get_json()
-    text = data.get('text', '')
-    translated = translate_message(text)
-    return jsonify({'translated': translated})
+        # Send reply back
+        client.messages.create(
+            from_=twilio_whatsapp,
+            body=reply,
+            to=from_number
+        )
 
-@app.route('/reply', methods=['POST'])
-def reply():
-    data = request.get_json()
-    text = data.get('text', '')
-    translated = translate_message(text)
-    return jsonify({'translated': translated})
+    return str(resp)
 
-# Example function to send SMS using Twilio
-@app.route('/send_sms', methods=['POST'])
-def send_sms():
-    data = request.get_json()
-    to_number = data.get('to', '')
-    message = data.get('message', '')
-    # Translate message if needed
-    translated_message = translate_message(message)
-    # Send SMS (replace 'from_' with your Twilio phone number)
-    sms = twilio_client.messages.create(
-        body=translated_message,
-        from_='+YOUR_TWILIO_PHONE_NUMBER',  # Replace with your Twilio number
-        to=to_number
-    )
-    return jsonify({'sid': sms.sid, 'translated_message': translated_message})
-
-if __name__ == '__main__':
-    app.run(debug=True)
+if _name_ == "_main_":
+    app.run(host="0.0.0.0", port=5000)
