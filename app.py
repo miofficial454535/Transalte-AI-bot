@@ -1,3 +1,4 @@
+mport os
 from flask import Flask, request
 from twilio.rest import Client
 from twilio.twiml.messaging_response import MessagingResponse
@@ -20,13 +21,13 @@ def whatsapp_reply():
 
     if incoming_msg:
         try:
-            # Try English → Arabic
-            translated = GoogleTranslator(source='en', target='ar').translate(incoming_msg)
-            reply = f"English → Arabic:\n{translated}"
-        except Exception:
-            # If not English, try Arabic → English
-            translated = GoogleTranslator(source='ar', target='en').translate(incoming_msg)
-            reply = f"Arabic → English:\n{translated}"
+            # Detect and translate
+            translated = GoogleTranslator(source="auto", target="en").translate(incoming_msg)
+            back_translated = GoogleTranslator(source="en", target="ar").translate(incoming_msg)
+
+            reply = f"🌐 Translation Service\n\nEnglish: {translated}\nArabic: {back_translated}"
+        except Exception as e:
+            reply = f"⚠️ Translation failed: {str(e)}"
 
         # Send reply back
         client.messages.create(
@@ -37,5 +38,6 @@ def whatsapp_reply():
 
     return str(resp)
 
+
 if _name_ == "_main_":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
