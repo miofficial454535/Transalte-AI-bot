@@ -10,7 +10,7 @@ auth_token = "4c11dcc444ac491a6969e8854f18d12f"
 twilio_whatsapp = "whatsapp:+14155238886"  # Twilio sandbox number
 
 client = Client(account_sid, auth_token)
-app = Flask(_name_)
+app = Flask(__name__)
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_reply():
