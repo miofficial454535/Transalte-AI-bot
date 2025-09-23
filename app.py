@@ -1,65 +1,19 @@
-import os
-from flask import Flask, request
-from twilio.twiml.messaging_response import MessagingResponse
-from deep_translator import GoogleTranslator
+# Define your two users
+user_a = "whatsapp:+91XXXXXXXXXX"  # Person A (Arabic sender)
+user_b = "whatsapp:+91YYYYYYYYYY"  # Person B (English sender)
 
-# -----------------------------
-# Flask App Initialization
-# -----------------------------
-app = Flask(__name__)
-
-# -----------------------------
-# WhatsApp Webhook Route
-# -----------------------------
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_reply():
-    """
-    This function will be called every time a message is 
-    sent to your Twilio WhatsApp sandbox number.
-    """
-    # Get incoming user message
     incoming_msg = request.values.get("Body", "").strip()
-
-    # Create a Twilio Messaging Response object
-    resp = MessagingResponse()
+    from_number = request.values.get("From")
 
     if incoming_msg:
-        try:
-            # STEP 1: Translate incoming message to English
-            translated_en = GoogleTranslator(
-                source="auto", target="en"
-            ).translate(incoming_msg)
+        if from_number == user_a:  # Arabic → English → send to B
+            translated = GoogleTranslator(source="ar", target="en").translate(incoming_msg)
+            client.messages.create(from_=twilio_whatsapp, body=f"A (AR→EN): {translated}", to=user_b)
 
-            # STEP 2: Translate English into Arabic
-            translated_ar = GoogleTranslator(
-                source="en", target="ar"
-            ).translate(translated_en)
+        elif from_number == user_b:  # English → Arabic → send to A
+            translated = GoogleTranslator(source="en", target="ar").translate(incoming_msg)
+            client.messages.create(from_=twilio_whatsapp, body=f"B (EN→AR): {translated}", to=user_a)
 
-            # Final text reply
-            reply_text = (
-                "🌐 Translation Service\n\n"
-                f"English: {translated_en}\n"
-                f"Arabic: {translated_ar}"
-            )
-
-        except Exception as e:
-            # If translation fails (e.g. Google API issue)
-            reply_text = f"⚠️ Translation failed: {str(e)}"
-
-    else:
-        # If user sends empty message
-        reply_text = "⚠️ Please type something to translate."
-
-    # Attach reply into Twilio XML response
-    resp.message(reply_text)
-
-    # Return response back to Twilio (must be string)
-    return str(resp)
-
-
-# -----------------------------
-# Run Flask App (for Render/Local)
-# -----------------------------
-if __name__ == "__main__":
-    # Render sets its own PORT env variable
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    return "OK"
