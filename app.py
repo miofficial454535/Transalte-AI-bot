@@ -4,16 +4,16 @@ from twilio.rest import Client
 from deep_translator import GoogleTranslator
 
 # Twilio credentials
-account_sid = "ACxxxxxxxxxxxxxxxxxxxxxx"
-auth_token = "xxxxxxxxxxxxxxxxxxxxxxxx"
+account_sid = "AC606533d9e625f2daa604327665b20189"
+auth_token = "fc7586f83385f1d7df7156cfdb9c04a5"
 twilio_whatsapp = "whatsapp:+14155238886"  # Twilio sandbox number
 
 client = Client(account_sid, auth_token)
 app = Flask(__name__)
 
 # Define the two users (change to your Indian numbers with country code)
-user_a = "whatsapp:+91XXXXXXXXXX"  # Person A
-user_b = "whatsapp:+91YYYYYYYYYY"  # Person B
+user_a = "whatsapp:+919842829762"  # Person A
+user_b = "whatsapp:+916383636791"  # Person B
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_reply():
